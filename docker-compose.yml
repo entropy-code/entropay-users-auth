@@ -1,8 +1,35 @@
 version: '3.9'
 
+volumes:
+  postgres-user-auth:
+
 services:
-    entropay-users-auth:
-      build: .
-      ports:
-          - "8000:8000"
+  app:
+    build: .
+    env_file: local.env
+    ports:
+        - "8000:8000"
+
+  postgres:
+    image: 'postgres:10.2-alpine'
+    environment:
+      - 'POSTGRES_DB=user-auth'
+      - 'POSTGRES_USER=entropay'
+      - 'POSTGRES_PASSWORD=entropay'
+      - 'PGDATA=/var/lib/postgresql/data/user-auth'
+    ports:
+      - '5430:5432'
+    volumes:
+      - 'postgres-user-auth:/var/lib/postgresql/data/user-auth'
+
+  pgweb:
+    image: 'sosedoff/pgweb:latest'
+    depends_on:
+      - 'postgres'
+    environment:
+      - 'DATABASE_URL=postgres://entropay:entropay@postgres:5432/user-auth?sslmode=disable'
+      - 'VIRTUAL_HOST=pgweb'
+      - 'VIRTUAL_PORT=8081'
+    ports:
+      - '8082:8081'
 
