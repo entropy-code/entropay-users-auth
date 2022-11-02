@@ -3,6 +3,7 @@ package com.entropyteam.entropay.users.auth.services;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import com.entropyteam.entropay.users.auth.common.BaseRepository;
 import com.entropyteam.entropay.users.auth.common.BaseService;
 import com.entropyteam.entropay.users.auth.dtos.UserDto;
@@ -16,6 +17,8 @@ import lombok.AllArgsConstructor;
 public class UserService extends BaseService<User, UserDto, UUID> {
 
     private final UserRepository userRepository;
+
+    @Transactional
     public Optional<UserDto> getUserByUsername(String username) {
         return userRepository.findByUsername(username).map(UserDto::new);
     }

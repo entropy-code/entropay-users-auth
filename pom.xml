@@ -18,7 +18,6 @@
 		<collections.version>4.1</collections.version>
 		<flywaydb.version>8.5.10</flywaydb.version>
 		<java.version>17</java.version>
-		<lombok.version>1.18.22</lombok.version>
 		<postgresql.version>42.3.5</postgresql.version>
 	</properties>
 	<dependencies>
@@ -50,15 +49,9 @@
 			<artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.projectlombok</groupId>
-			<artifactId>lombok</artifactId>
-			<version>${lombok.version}</version>
-			<scope>provided</scope>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jpa</artifactId>
 		</dependency>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-data-jpa</artifactId>
-    </dependency>
 		<dependency>
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>

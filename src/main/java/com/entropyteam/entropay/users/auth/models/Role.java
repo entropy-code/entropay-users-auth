@@ -13,7 +13,7 @@ public class Role extends BaseEntity {
     private String roleName;
 
     @OneToMany(mappedBy = "role")
-    Set<UserTenant> userTenants;
+    private Set<UserTenant> userTenants;
 
     public Role() {
     }

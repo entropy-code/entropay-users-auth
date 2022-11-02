@@ -12,13 +12,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class TokenUtils {
 
-    public static final String COGNITO_CLAIMS_USERNAME_KEY = "username";
-    public static final String COGNITO_JWT_CLAIMS_USERNAME_KEY = "cognito:username";
-    public static final String COGNITO_CLAIMS_ROLE_KEY = "custom:role";
+    private static final String COGNITO_CLAIMS_USERNAME_KEY = "username";
+    private static final String COGNITO_JWT_CLAIMS_USERNAME_KEY = "cognito:username";
+    private static final String COGNITO_CLAIMS_ROLE_KEY = "custom:role";
+
+    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     public static Map<String, Collection<String>> getRoles(Map<String, Object> tokenClaims) {
         try {
-            return new ObjectMapper().readValue((String) tokenClaims.get(COGNITO_CLAIMS_ROLE_KEY), Map.class);
+            return MAPPER.readValue((String) tokenClaims.get(COGNITO_CLAIMS_ROLE_KEY), Map.class);
         } catch (JsonProcessingException e) {
             throw new AuthException("Error reading roles from token");
         }

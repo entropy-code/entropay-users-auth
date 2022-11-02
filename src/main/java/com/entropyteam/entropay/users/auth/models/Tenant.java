@@ -9,11 +9,13 @@ import com.entropyteam.entropay.users.auth.common.BaseEntity;
 @Entity
 @Table(name = "tenant")
 public class Tenant extends BaseEntity {
+
     private String name;
+
     private String displayName;
 
     @OneToMany(mappedBy = "tenant")
-    Set<UserTenant> userTenants;
+    private Set<UserTenant> userTenants;
 
     public Tenant() {
     }

@@ -12,13 +12,15 @@ import com.entropyteam.entropay.users.auth.common.BaseEntity;
 public class User extends BaseEntity {
 
     private String username;
-    private String firstName;
-    private String lastName;
-    private String email;
-    private String externalId;
 
-    @OneToMany(fetch = FetchType.EAGER, mappedBy = "user")
-    Set<UserTenant> userTenants;
+    private String firstName;
+
+    private String lastName;
+
+    private String email;
+
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "user")
+    private Set<UserTenant> userTenants;
 
     public User() {
     }
@@ -53,14 +55,6 @@ public class User extends BaseEntity {
 
     public void setEmail(String email) {
         this.email = email;
-    }
-
-    public String getExternalId() {
-        return externalId;
-    }
-
-    public void setExternalId(String externalId) {
-        this.externalId = externalId;
     }
 
     public Set<UserTenant> getUserTenants() {

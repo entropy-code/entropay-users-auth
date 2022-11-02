@@ -12,15 +12,15 @@ public class UserTenant extends BaseEntity {
 
     @ManyToOne
     @JoinColumn(name = "user_id")
-    User user;
+    private User user;
 
     @ManyToOne
     @JoinColumn(name = "tenant_id")
-    Tenant tenant;
+    private Tenant tenant;
 
     @ManyToOne
     @JoinColumn(name = "role_id")
-    Role role;
+    private Role role;
 
     public UserTenant() {
     }

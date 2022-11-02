@@ -7,7 +7,6 @@ CREATE TABLE "user" (
     first_name  VARCHAR(255),
     last_name   VARCHAR(255),
     email       VARCHAR(255),
-    external_id VARCHAR(255),
     CONSTRAINT pk_user PRIMARY KEY (id)
 )
 ;
