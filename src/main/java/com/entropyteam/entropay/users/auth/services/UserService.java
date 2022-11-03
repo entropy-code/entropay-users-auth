@@ -2,6 +2,7 @@ package com.entropyteam.entropay.users.auth.services;
 
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.entropyteam.entropay.users.auth.common.BaseRepository;
@@ -10,13 +11,15 @@ import com.entropyteam.entropay.users.auth.dtos.UserDto;
 import com.entropyteam.entropay.users.auth.models.User;
 import com.entropyteam.entropay.users.auth.repositories.UserRepository;
 
-import lombok.AllArgsConstructor;
-
 @Service
-@AllArgsConstructor
 public class UserService extends BaseService<User, UserDto, UUID> {
 
     private final UserRepository userRepository;
+
+    @Autowired
+    public UserService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
 
     @Transactional
     public Optional<UserDto> getUserByUsername(String username) {

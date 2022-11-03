@@ -4,6 +4,8 @@ import static com.entropyteam.entropay.users.auth.config.AuthConstants.ROLE_ADMI
 
 import java.util.Map;
 import java.util.Optional;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -18,36 +20,38 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.entropyteam.entropay.users.auth.common.exceptions.AuthException;
-import com.entropyteam.entropay.users.auth.config.TokenUtils;
+import com.entropyteam.entropay.users.auth.config.TokenService;
 import com.entropyteam.entropay.users.auth.dtos.UserDto;
 import com.entropyteam.entropay.users.auth.services.UserService;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
-
 @RestController
 @CrossOrigin
-@RequiredArgsConstructor
-@Log4j2
 @RequestMapping(value = "/auth")
 public class AuthController {
 
-    private final UserService userService;
+    private static final Logger LOGGER = LogManager.getLogger();
 
+    private final UserService userService;
+    private final TokenService tokenService;
     @Value("${appHomeUrl}")
     private String loginSuccessRedirectUrl;
+
+    public AuthController(UserService userService, TokenService tokenService) {
+        this.userService = userService;
+        this.tokenService = tokenService;
+    }
 
     @GetMapping("/login")
     public ResponseEntity<String> login(Authentication authentication) {
         OidcUser oidcUser = (OidcUser) authentication.getPrincipal();
         Map<String, Object> tokenClaims = oidcUser.getClaims();
-        Optional<UserDto> authUser = userService.getUserByUsername(TokenUtils.getUsername(tokenClaims));
+        Optional<UserDto> authUser = userService.getUserByUsername(tokenService.getUsername(tokenClaims));
         if (authUser.isEmpty()) {
-            throw new AuthException("User " + TokenUtils.getUsername(tokenClaims) + " not found");
+            throw new AuthException("User " + tokenService.getUsername(tokenClaims) + " not found");
         }
 
-        TokenUtils.validateTokenRoles(tokenClaims, authUser.get().rolesByTenant());
-        log.info("Login request for user: {}", TokenUtils.getUsername(tokenClaims));
+        tokenService.validateTokenRoles(tokenClaims, authUser.get().rolesByTenant());
+        LOGGER.info("Login request for user: {}", tokenService.getUsername(tokenClaims));
         HttpHeaders headers = new HttpHeaders();
         headers.add("location", loginSuccessRedirectUrl
                 + "?token=" + oidcUser.getIdToken().getTokenValue()
@@ -60,12 +64,12 @@ public class AuthController {
     public ResponseEntity<UserDto> getIdentity(JwtAuthenticationToken authentication) {
         Jwt jwt = authentication.getToken();
         Map<String, Object> tokenClaims = jwt.getClaims();
-        Optional<UserDto> authUser = userService.getUserByUsername(TokenUtils.getUsername(tokenClaims));
+        Optional<UserDto> authUser = userService.getUserByUsername(tokenService.getUsername(tokenClaims));
         if (authUser.isEmpty()) {
-            throw new AuthException("User " + TokenUtils.getUsername(tokenClaims) + " not found");
+            throw new AuthException("User " + tokenService.getUsername(tokenClaims) + " not found");
         }
 
-        log.info("Get identity request for user: {}", TokenUtils.getUsername(tokenClaims));
+        LOGGER.info("Get identity request for user: {}", tokenService.getUsername(tokenClaims));
          return ResponseEntity.ok(authUser.get());
     }
 }

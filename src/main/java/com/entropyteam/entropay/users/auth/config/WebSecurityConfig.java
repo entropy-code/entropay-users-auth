@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
@@ -18,9 +19,6 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.security.web.SecurityFilterChain;
 
-import lombok.AllArgsConstructor;
-
-@AllArgsConstructor
 @Configuration
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(securedEnabled = true)
@@ -32,6 +30,13 @@ public class WebSecurityConfig {
     public static final String COOKIE_NAME = "JSESSIONID";
 
     private final CognitoOidcLogoutSuccessHandler cognitoOidcLogoutSuccessHandler;
+    private final TokenService tokenService;
+
+    public WebSecurityConfig(CognitoOidcLogoutSuccessHandler cognitoOidcLogoutSuccessHandler,
+            TokenService tokenService) {
+        this.cognitoOidcLogoutSuccessHandler = cognitoOidcLogoutSuccessHandler;
+        this.tokenService = tokenService;
+    }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
@@ -64,7 +69,7 @@ public class WebSecurityConfig {
     }
 
     private Set<GrantedAuthority> getGrantedAuthorities(Map<String, Object> appClaims) {
-        Map<String, Collection<String>> rolesByTenant = TokenUtils.getRoles(appClaims);
+        Map<String, Collection<String>> rolesByTenant = tokenService.getRoles(appClaims);
         //TODO get role for current tenant
         Collection<String> roles = rolesByTenant.values().stream().findFirst().orElse(Collections.emptySet());
         return roles.stream()
