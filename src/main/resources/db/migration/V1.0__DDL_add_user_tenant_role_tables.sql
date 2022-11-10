@@ -14,7 +14,7 @@ CREATE TABLE "user" (
 INSERT INTO "user"
 SELECT
     '360e99a0-2619-469d-b88b-6d6355e3d8fa', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, FALSE, 'admin', 'entropay', 'admin'
-    , 'admin@entropay.com', null
+    , 'admin@entropay.com'
 ;
 
 CREATE TABLE tenant (
