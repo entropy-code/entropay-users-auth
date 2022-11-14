@@ -9,6 +9,8 @@ services:
     env_file: local.env
     ports:
         - "8000:8000"
+    depends_on:
+      - postgres
 
   postgres:
     image: 'postgres:10.2-alpine'
