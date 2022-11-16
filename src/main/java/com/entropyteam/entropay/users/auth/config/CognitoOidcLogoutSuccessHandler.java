@@ -15,8 +15,6 @@ public class CognitoOidcLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandl
 
     @Value("${cognitoLogoutUrl}")
     private String cognitoLogoutUrl;
-    @Value("${appHomeUrl}")
-    private String logoutSuccessRedirectUrl;
     @Value("${spring.security.oauth2.client.registration.cognito.clientId}")
     private String clientId;
 
@@ -27,7 +25,7 @@ public class CognitoOidcLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandl
         return UriComponentsBuilder
                 .fromUri(URI.create(cognitoLogoutUrl))
                 .queryParam("client_id", clientId)
-                .queryParam("logout_uri", logoutSuccessRedirectUrl)
+                .queryParam("logout_uri", request.getParameter("redirectUrl"))
                 .encode(StandardCharsets.UTF_8)
                 .build()
                 .toUriString();

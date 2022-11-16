@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +17,7 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.entropyteam.entropay.users.auth.common.exceptions.AuthException;
 import com.entropyteam.entropay.users.auth.config.TokenService;
@@ -33,8 +33,6 @@ public class AuthController {
 
     private final UserService userService;
     private final TokenService tokenService;
-    @Value("${appHomeUrl}")
-    private String loginSuccessRedirectUrl;
 
     public AuthController(UserService userService, TokenService tokenService) {
         this.userService = userService;
@@ -42,7 +40,7 @@ public class AuthController {
     }
 
     @GetMapping("/login")
-    public ResponseEntity<String> login(Authentication authentication) {
+    public ResponseEntity<String> login(Authentication authentication, @RequestParam String redirectUrl) {
         OidcUser oidcUser = (OidcUser) authentication.getPrincipal();
         Map<String, Object> tokenClaims = oidcUser.getClaims();
         Optional<UserDto> authUser = userService.getUserByUsername(tokenService.getUsername(tokenClaims));
@@ -53,7 +51,7 @@ public class AuthController {
         tokenService.validateTokenRoles(tokenClaims, authUser.get().rolesByTenant());
         LOGGER.info("Login request for user: {}", tokenService.getUsername(tokenClaims));
         HttpHeaders headers = new HttpHeaders();
-        headers.add("location", loginSuccessRedirectUrl
+        headers.add("location", redirectUrl
                 + "?token=" + oidcUser.getIdToken().getTokenValue()
                 + "&expiresAt=" + oidcUser.getIdToken().getExpiresAt());
         return new ResponseEntity<>(headers, HttpStatus.PERMANENT_REDIRECT);
@@ -70,6 +68,6 @@ public class AuthController {
         }
 
         LOGGER.info("Get identity request for user: {}", tokenService.getUsername(tokenClaims));
-         return ResponseEntity.ok(authUser.get());
+        return ResponseEntity.ok(authUser.get());
     }
 }
