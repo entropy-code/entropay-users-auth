@@ -39,13 +39,13 @@ jobs:
         java-version: '17'
         distribution: 'adopt'
 
-    - name: Get tag version
-      run: |
-        NEW_VERSION=${GITHUB_REF#refs/tags/}
-        mvn versions:set -DnewVersion=$NEW_VERSION
+#    - name: Set tag to app
+#      run: |
+#        NEW_VERSION=${GITHUB_REF#refs/tags/}
+#        mvn versions:set -DnewVersion=$NEW_VERSION
 
-    - name: Set Version
-      id: set-version
+    - name: Get Version
+      id: get-version
       run: |
         export NEW_VERSION=$(mvn help:evaluate -Dexpression=project.version -Dexpression=project.version -q -DforceStdout)
         echo "::set-output name=new-version::${NEW_VERSION}"
@@ -80,6 +80,10 @@ jobs:
 #          exit 1
 #        fi
 
+    - name: Download task definition
+      run: |
+        aws ecs describe-task-definition --task-definition entropay-user-auth --query taskDefinition > task-definition.json
+
     - name: Login to Amazon ECR
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1
@@ -113,7 +117,7 @@ jobs:
 
 #  prepare-next-version:
 #    name: Prepare the next development version
-#    needs: tag
+#    needs: tag, package-build-deploy
 #    runs-on: ubuntu-latest
 #    environment: production
 #    steps:
