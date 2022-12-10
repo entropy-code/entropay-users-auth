@@ -13,7 +13,7 @@ on:
 env:
   AWS_REGION: us-east-1
   ECR_REPOSITORY: entropay-user-auth
-  ECS_SERVICE: entropay-user-auth
+  ECS_SERVICE: entropay-prod-user-auth
   ECS_CLUSTER: entropay-prod
   ECS_TASK_DEFINITION: .aws/task-definition.json
   CONTAINER_NAME: entropay-user-auth
@@ -27,7 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     outputs:
-      new-version: ${{ steps.set-version.outputs.new-version }}
+      new-version: ${{ steps.get-version.outputs.new-version }}
 
     steps:
     - name: Checkout
@@ -95,9 +95,9 @@ jobs:
         NEW_VERSION: ${{ needs.tag.outputs.new-version }}
       run: |
         # Build a docker container and push it to ECR so that it can be deployed to ECS.
-        docker build . -t $ECR_REGISTRY/$ECR_REPOSITORY:NEW_VERSION
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY:NEW_VERSION
-        echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:NEW_VERSION"
+        docker build . -t $ECR_REGISTRY/$ECR_REPOSITORY:$NEW_VERSION
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$NEW_VERSION
+        echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$NEW_VERSION"
 
     - name: Fill in the new image ID in the Amazon ECS task definition
       id: task-def
