@@ -1,9 +1,14 @@
 name: Deploy to prod
 
+#on:
+#  push:
+#    tags:
+#      - '[0-9]+.[0-9]+.[0-9]+'
+
 on:
   push:
-    tags:
-      - '[0-9]+.[0-9]+.[0-9]+'
+    branches:
+      - EN-25
 
 env:
   AWS_REGION: us-east-1
@@ -61,6 +66,19 @@ jobs:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ env.AWS_REGION }}
+
+#    - name: Run flyway migrations
+#      run: |
+#        # Synchronise s3 bucket with sql directory (--delete deletes any files on the target which no longer exist)
+#        aws s3 sync src/main/resources/db/migration/ s3://entropay-prod-envs/user-auth/migrations/ --delete
+#        aws lambda invoke \
+#        --function-name prod-db-migration response \
+#        --payload '{ "appName": "user-auth" }' \
+#        --cli-binary-format raw-in-base64-out
+#        if grep -q Error response; then
+#          cat response
+#          exit 1
+#        fi
 
     - name: Login to Amazon ECR
       id: login-ecr
