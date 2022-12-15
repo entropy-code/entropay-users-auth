@@ -112,7 +112,7 @@ jobs:
 
   prepare-next-version:
     name: Prepare the next development version
-    needs: tag, package-build-deploy
+    needs: [tag, package-build-deploy]
     runs-on: ubuntu-latest
     environment: production
     steps:
@@ -136,6 +136,7 @@ jobs:
         with:
           commit-message: Prepare next dev version
           branch: next-version-${{ steps.set-next-version.outputs.next-version }}
+          base: ${{ github.head_ref }}
           delete-branch: true
           title: 'Prepare next dev version'
           body: |
