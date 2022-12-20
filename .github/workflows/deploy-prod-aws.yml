@@ -135,7 +135,7 @@ jobs:
         run: |
           mvn versions:set -DnextSnapshot
           export NEXT_VERSION=$(mvn help:evaluate -Dexpression=project.version -Dexpression=project.version -q -DforceStdout)
-          echo "::set-env name=NEXT_VERSION::${NEXT_VERSION}"
+          echo "::set-output name=NEXT_VERSION::${NEXT_VERSION}"
 
       - name: Create pull request
         uses: peter-evans/create-pull-request@v4
