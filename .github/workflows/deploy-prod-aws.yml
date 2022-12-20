@@ -1,9 +1,14 @@
 name: Deploy to prod
 
+#on:
+#  push:
+#    tags:
+#      - '[0-9]+.[0-9]+.[0-9]+'
+
 on:
   push:
-    tags:
-      - '[0-9]+.[0-9]+.[0-9]+'
+    branches:
+      - EN-25
 
 env:
   AWS_REGION: us-east-1
@@ -45,74 +50,74 @@ jobs:
         export NEW_VERSION=$(mvn help:evaluate -Dexpression=project.version -Dexpression=project.version -q -DforceStdout)
         echo "::set-output name=new-version::${NEW_VERSION}"
 
-  package-build-deploy:
-    name: Package, build and deploy
-    needs: tag
-    runs-on: ubuntu-latest
-    environment: production
-
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v3
-
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ env.AWS_REGION }}
-
-    - name: Run flyway migrations
-      run: |
-        # Synchronise s3 bucket with sql directory (--delete deletes any files on the target which no longer exist)
-        aws s3 sync src/main/resources/db/migration/ s3://entropay-prod-envs/user-auth/migrations/ --delete
-        aws lambda invoke \
-        --function-name prod-db-migration response \
-        --payload '{ "appName": "user-auth" }' \
-        --cli-binary-format raw-in-base64-out
-        if grep -q Error response; then
-          cat response
-          exit 1
-        fi
-
-    - name: Download task definition
-      run: |
-        aws ecs describe-task-definition --task-definition entropay-user-auth --query taskDefinition > task-definition.json
-
-    - name: Login to Amazon ECR
-      id: login-ecr
-      uses: aws-actions/amazon-ecr-login@v1
-
-    - name: Build, tag, and push image to Amazon ECR
-      id: build-image
-      env:
-        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        NEW_VERSION: ${{ needs.tag.outputs.new-version }}
-      run: |
-        # Build a docker container and push it to ECR so that it can be deployed to ECS.
-        docker build . -t $ECR_REGISTRY/$ECR_REPOSITORY:$NEW_VERSION
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$NEW_VERSION
-        echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$NEW_VERSION"
-
-    - name: Fill in the new image ID in the Amazon ECS task definition
-      id: task-def
-      uses: aws-actions/amazon-ecs-render-task-definition@v1
-      with:
-        task-definition: task-definition.json
-        container-name: ${{ env.CONTAINER_NAME }}
-        image: ${{ steps.build-image.outputs.image }}
-
-    - name: Deploy Amazon ECS task definition
-      uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-      with:
-        task-definition: ${{ steps.task-def.outputs.task-definition }}
-        service: ${{ env.ECS_SERVICE }}
-        cluster: ${{ env.ECS_CLUSTER }}
-        wait-for-service-stability: true
+#  package-build-deploy:
+#    name: Package, build and deploy
+#    needs: tag
+#    runs-on: ubuntu-latest
+#    environment: production
+#
+#    steps:
+#    - name: Checkout
+#      uses: actions/checkout@v3
+#
+#    - name: Configure AWS credentials
+#      uses: aws-actions/configure-aws-credentials@v1
+#      with:
+#        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#        aws-region: ${{ env.AWS_REGION }}
+#
+#    - name: Run flyway migrations
+#      run: |
+#        # Synchronise s3 bucket with sql directory (--delete deletes any files on the target which no longer exist)
+#        aws s3 sync src/main/resources/db/migration/ s3://entropay-prod-envs/user-auth/migrations/ --delete
+#        aws lambda invoke \
+#        --function-name prod-db-migration response \
+#        --payload '{ "appName": "user-auth" }' \
+#        --cli-binary-format raw-in-base64-out
+#        if grep -q Error response; then
+#          cat response
+#          exit 1
+#        fi
+#
+#    - name: Download task definition
+#      run: |
+#        aws ecs describe-task-definition --task-definition entropay-user-auth --query taskDefinition > task-definition.json
+#
+#    - name: Login to Amazon ECR
+#      id: login-ecr
+#      uses: aws-actions/amazon-ecr-login@v1
+#
+#    - name: Build, tag, and push image to Amazon ECR
+#      id: build-image
+#      env:
+#        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+#        NEW_VERSION: ${{ needs.tag.outputs.new-version }}
+#      run: |
+#        # Build a docker container and push it to ECR so that it can be deployed to ECS.
+#        docker build . -t $ECR_REGISTRY/$ECR_REPOSITORY:$NEW_VERSION
+#        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$NEW_VERSION
+#        echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$NEW_VERSION"
+#
+#    - name: Fill in the new image ID in the Amazon ECS task definition
+#      id: task-def
+#      uses: aws-actions/amazon-ecs-render-task-definition@v1
+#      with:
+#        task-definition: task-definition.json
+#        container-name: ${{ env.CONTAINER_NAME }}
+#        image: ${{ steps.build-image.outputs.image }}
+#
+#    - name: Deploy Amazon ECS task definition
+#      uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+#      with:
+#        task-definition: ${{ steps.task-def.outputs.task-definition }}
+#        service: ${{ env.ECS_SERVICE }}
+#        cluster: ${{ env.ECS_CLUSTER }}
+#        wait-for-service-stability: true
 
   prepare-next-version:
     name: Prepare the next development version
-    needs: [tag, package-build-deploy]
+    needs: [tag] #, package-build-deploy]
     runs-on: ubuntu-latest
     environment: production
     steps:
@@ -129,13 +134,14 @@ jobs:
         id: set-next-version
         run: |
           mvn versions:set -DnextSnapshot
-          echo "next-version=$(mvn help:evaluate -Dexpression=project.version -Dexpression=project.version -q -DforceStdout)" >> $GITHUB_ENV
+          export NEXT_VERSION=$(mvn help:evaluate -Dexpression=project.version -Dexpression=project.version -q -DforceStdout)
+          echo "::set-env name=NEXT_VERSION::${NEXT_VERSION}"
 
       - name: Create pull request
         uses: peter-evans/create-pull-request@v4
         with:
           commit-message: Prepare next dev version
-          branch: next-version-${{ steps.set-next-version.outputs.next-version }}
+          branch: next-version-$NEXT_VERSION
           base: ${{ github.head_ref }}
           delete-branch: true
           title: 'Prepare next dev version'
