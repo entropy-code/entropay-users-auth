@@ -19,7 +19,7 @@ env:
   CONTAINER_NAME: entropay-user-auth
 
 permissions:
-  contents: read
+  contents: write
   pull-requests: write
 
 jobs:
@@ -141,6 +141,7 @@ jobs:
       - name: Create pull request
         uses: peter-evans/create-pull-request@v4
         with:
+          token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: Prepare next dev version
           branch: next-version-$NEXT_VERSION
           base: ${{ github.head_ref }}
