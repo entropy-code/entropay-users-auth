@@ -136,14 +136,15 @@ jobs:
         run: |
           mvn versions:set -DnextSnapshot
           export NEXT_VERSION=$(mvn help:evaluate -Dexpression=project.version -Dexpression=project.version -q -DforceStdout)
-          echo "::set-output name=NEXT_VERSION::${NEXT_VERSION}"
+          echo "NEXT_VERSION=${NEXT_VERSION}" >> $GITHUB_OUTPUT
 
       - name: Create pull request
         uses: peter-evans/create-pull-request@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: Prepare next dev version
-          branch: next-version-$NEXT_VERSION
+          committer: GitHub <noreply@github.com>
+          branch: next-version-${{ steps.set-next-version.outputs.NEXT_VERSION }}
           base: ${{ github.head_ref }}
           delete-branch: true
           title: 'Prepare next dev version'
