@@ -1,6 +1,9 @@
 package com.entropyteam.entropay.users.auth.controllers;
 
 import static com.entropyteam.entropay.users.auth.config.AuthConstants.ROLE_ADMIN;
+import static com.entropyteam.entropay.users.auth.config.AuthConstants.ROLE_ANALYST;
+import static com.entropyteam.entropay.users.auth.config.AuthConstants.ROLE_DEVELOPMENT;
+import static com.entropyteam.entropay.users.auth.config.AuthConstants.ROLE_MANAGER_HR;
 
 import java.util.Map;
 import java.util.Optional;
@@ -57,7 +60,7 @@ public class AuthController {
         return new ResponseEntity<>(headers, HttpStatus.PERMANENT_REDIRECT);
     }
 
-    @Secured(ROLE_ADMIN)
+    @Secured({ROLE_ADMIN, ROLE_MANAGER_HR, ROLE_ANALYST, ROLE_DEVELOPMENT})
     @GetMapping("/identity")
     public ResponseEntity<UserDto> getIdentity(JwtAuthenticationToken authentication) {
         Jwt jwt = authentication.getToken();
