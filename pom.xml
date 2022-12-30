@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.entropyteam.entropay</groupId>
 	<artifactId>entropay-users-auth</artifactId>
-	<version>0.0.2-SNAPSHOT</version>
+	<version>1.0.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<name>entropay-users-auth</name>
 	<description>Entropay Users Auth</description>
