@@ -1,0 +1,1 @@
+INSERT INTO "role" (id, created_at, modified_at, deleted, role_name) VALUES('710d650e-96f0-4d90-a46e-24fd44e3b1da'::uuid, '2023-08-25 11:20:54.279', '2023-08-25 11:20:54.279', false, 'HR_DIRECTOR');
