@@ -45,10 +45,10 @@ public class WebSecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.cors().and().csrf().disable()
                 // Allow actuator
-                .authorizeRequests().antMatchers(ACTUATOR_URL).permitAll()
+                .authorizeRequests().requestMatchers(ACTUATOR_URL).permitAll()
 
                 // Use oauth2Login for login url
-                .antMatchers(LOGIN_URL).authenticated().and()
+                .requestMatchers(LOGIN_URL).authenticated().and()
                 .oauth2Login()
                 .userInfoEndpoint()
                 .and().and()

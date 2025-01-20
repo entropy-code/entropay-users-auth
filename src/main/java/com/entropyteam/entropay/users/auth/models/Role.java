@@ -1,9 +1,9 @@
 package com.entropyteam.entropay.users.auth.models;
 
 import java.util.Set;
-import javax.persistence.Entity;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
+import jakarta.persistence.Entity;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import com.entropyteam.entropay.users.auth.common.BaseEntity;
 
 @Entity
