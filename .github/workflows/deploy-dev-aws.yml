@@ -7,7 +7,7 @@ on:
     types: [closed]
   push:
     branches:
-      - main
+      - develop
 
 env:
   AWS_REGION: us-east-1
