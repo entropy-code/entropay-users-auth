@@ -1,9 +1,13 @@
 name: Deploy to dev
 
 on:
+  pull_request:
+    branches:
+      - main
+    types: [closed]
   push:
     branches:
-      - develop
+      - main
 
 env:
   AWS_REGION: us-east-1
