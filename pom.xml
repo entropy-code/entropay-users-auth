@@ -21,7 +21,7 @@
 		<flywaydb.version>8.5.10</flywaydb.version>
 		<java.version>21</java.version>
 		<log4j.version>2.24.3</log4j.version>
-		<postgresql.version>42.3.5</postgresql.version>
+		<postgresql.version>42.7.5</postgresql.version>
 	</properties>
 
 	<dependencies>
