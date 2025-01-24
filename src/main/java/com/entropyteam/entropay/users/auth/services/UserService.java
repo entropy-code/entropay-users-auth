@@ -22,8 +22,8 @@ public class UserService extends BaseService<User, UserDto, UUID> {
     }
 
     @Transactional
-    public Optional<UserDto> getUserByUsername(String username) {
-        return userRepository.findByUsername(username).map(UserDto::new);
+    public Optional<UserDto> getUserByEmail(String email) {
+        return userRepository.findByEmail(email).map(UserDto::new);
     }
 
     @Override
