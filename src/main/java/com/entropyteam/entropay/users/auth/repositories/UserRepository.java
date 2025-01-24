@@ -7,5 +7,5 @@ import com.entropyteam.entropay.users.auth.models.User;
 
 public interface UserRepository extends BaseRepository<User, UUID> {
 
-    Optional<User> findByUsername(String username);
+    Optional<User> findByEmail(String email);
 }
