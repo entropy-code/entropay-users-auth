@@ -17,7 +17,7 @@
 	<description>Entropay Users Auth</description>
 
 	<properties>
-		<collections.version>4.4</collections.version>
+		<collections.version>4.5.0</collections.version>
 		<flywaydb.version>8.5.10</flywaydb.version>
 		<java.version>21</java.version>
 		<log4j.version>2.24.3</log4j.version>
