@@ -18,7 +18,7 @@ Identity service for the Entroteam platform. Manages authentication via AWS Cogn
 
 ```bash
 # Start database
-docker-compose up -d postgres pgweb
+docker compose up -d postgres pgweb
 
 # Run application
 ./mvnw spring-boot:run
@@ -48,3 +48,8 @@ Key properties:
 - `spring.security.oauth2.client.*` — Cognito OAuth2 client config
 
 See the meta-repo's `COGNITO.md` for Cognito pool IDs and environment-specific values.
+
+## Notes
+
+- Local Docker uses PostgreSQL 12 on port `5430`.
+- If you are upgrading from an older local Postgres volume, remove and recreate the `postgres-user-auth` volume before restoring data.
