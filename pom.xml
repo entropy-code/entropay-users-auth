@@ -76,6 +76,11 @@
 			<artifactId>log4j-core</artifactId>
 			<version>${log4j.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-core</artifactId>
+			<version>${flywaydb.version}</version>
+		</dependency>
 		<!-- Test -->
 		<dependency>
 			<groupId>org.springframework.security</groupId>
