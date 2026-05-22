@@ -49,7 +49,9 @@ public class AuthController {
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
 
-        String email = (String) authentication.getToken().getClaims().get("email");
+        // The security converter resolves the email (from the token claim or, for access
+        // tokens, from Cognito userInfo) and exposes it as the authentication name.
+        String email = authentication.getName();
         UserDto authUser = userService.getUserByEmail(email)
                 .orElseThrow(() -> new AuthException("User %s not found".formatted(email)));
 
