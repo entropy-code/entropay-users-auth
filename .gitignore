@@ -58,4 +58,5 @@ build/
 
 *.env
 *.versionsBackup
+src/main/resources/application-local.properties
 
