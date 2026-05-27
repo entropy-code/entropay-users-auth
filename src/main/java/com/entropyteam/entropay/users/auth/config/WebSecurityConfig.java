@@ -25,6 +25,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.filter.ForwardedHeaderFilter;
 import com.entropyteam.entropay.users.auth.common.exceptions.AuthException;
 import com.entropyteam.entropay.users.auth.dtos.UserDto;
+import com.entropyteam.entropay.users.auth.services.CognitoUserInfoService;
 import com.entropyteam.entropay.users.auth.services.UserService;
 
 @Configuration
@@ -37,13 +38,26 @@ public class WebSecurityConfig {
     public static final String LOGOUT_URL = "/auth/logout";
     public static final String COOKIE_NAME = "JSESSIONID";
 
+    /**
+     * Public, unauthenticated endpoints of the MCP OAuth2 auth gateway. Discovery and
+     * Dynamic Client Registration happen before any token exists, so they must bypass
+     * the oauth2Login filter (which would otherwise redirect to Cognito's login page).
+     */
+    public static final String[] MCP_AUTH_GATEWAY_URLS = {
+            "/.well-known/oauth-authorization-server",
+            "/.well-known/openid-configuration",
+            "/oauth2/register"
+    };
+
     private final CognitoOidcLogoutSuccessHandler cognitoOidcLogoutSuccessHandler;
     private final UserService userService;
+    private final CognitoUserInfoService cognitoUserInfoService;
 
     public WebSecurityConfig(CognitoOidcLogoutSuccessHandler cognitoOidcLogoutSuccessHandler,
-            UserService userService) {
+            UserService userService, CognitoUserInfoService cognitoUserInfoService) {
         this.cognitoOidcLogoutSuccessHandler = cognitoOidcLogoutSuccessHandler;
         this.userService = userService;
+        this.cognitoUserInfoService = cognitoUserInfoService;
     }
 
     @Bean
@@ -53,6 +67,7 @@ public class WebSecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(ACTUATOR_URL).permitAll()
+                        .requestMatchers(MCP_AUTH_GATEWAY_URLS).permitAll()
                         .requestMatchers(LOGIN_URL).authenticated()
                         .anyRequest().authenticated())
                 .oauth2Login(Customizer.withDefaults())
@@ -75,11 +90,16 @@ public class WebSecurityConfig {
     @Bean
     public Converter<Jwt, JwtAuthenticationToken> jwtCustomConverter() {
         return jwt -> {
-            String email = (String) jwt.getClaims().get("email");
+            // Id tokens carry the email claim directly; Cognito access tokens (used by MCP
+            // clients) do not, so the email is resolved from the Cognito userInfo endpoint.
+            String emailClaim = (String) jwt.getClaims().get("email");
+            String email = (emailClaim == null || emailClaim.isBlank())
+                    ? cognitoUserInfoService.fetchEmail(jwt.getTokenValue())
+                    : emailClaim;
             UserDto authUser = userService.getUserByEmail(email)
                     .orElseThrow(() -> new AuthException("User %s not found".formatted(email)));
             Set<GrantedAuthority> authorities = getGrantedAuthorities(authUser.rolesByTenant());
-            return new JwtAuthenticationToken(jwt, authorities);
+            return new JwtAuthenticationToken(jwt, authorities, email);
         };
     }
 
