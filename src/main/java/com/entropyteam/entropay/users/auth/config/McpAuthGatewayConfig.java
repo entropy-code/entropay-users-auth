@@ -11,8 +11,8 @@ import software.amazon.awssdk.services.cognitoidentityprovider.CognitoIdentityPr
 /**
  * Wiring for the MCP OAuth2 auth gateway: enables {@link McpAuthGatewayProperties},
  * registers the rate-limit filter scoped to the Dynamic Client Registration endpoint,
- * and provides the {@link CognitoIdentityProviderClient} used to create app clients on
- * demand from {@link com.entropyteam.entropay.users.auth.services.DynamicClientRegistrationService}.
+ * and provides the {@link CognitoIdentityProviderClient} the DCR service uses to create
+ * Cognito app clients on demand.
  */
 @Configuration
 @EnableConfigurationProperties(McpAuthGatewayProperties.class)
