@@ -1,5 +1,7 @@
 package com.entropyteam.entropay.users.auth.services;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.List;
@@ -156,7 +158,48 @@ public class DynamicClientRegistrationService {
     }
 
     private boolean isAllowedRedirectUri(String uri) {
-        return uri != null && properties.allowedRedirectUris().stream().anyMatch(uri::startsWith);
+        if (uri == null) {
+            return false;
+        }
+        URI requested;
+        try {
+            requested = new URI(uri);
+        } catch (URISyntaxException e) {
+            return false;
+        }
+        return properties.allowedRedirectUris().stream().anyMatch(allowed -> matchesAllowed(requested, allowed));
+    }
+
+    /**
+     * Matches a requested redirect URI against one allowlist entry. Scheme and host must
+     * match exactly (case-insensitive). If the allowed entry specifies a port, the request
+     * must match it; if not, any port is accepted (this is what makes {@code http://localhost}
+     * a useful dev wildcard). The request path must either equal the allowed path or sit
+     * under it as a sub-path, so {@code https://host/cb} does not match
+     * {@code https://host/cballowed}.
+     */
+    private static boolean matchesAllowed(URI requested, String allowedString) {
+        URI allowed;
+        try {
+            allowed = new URI(allowedString);
+        } catch (URISyntaxException e) {
+            return false;
+        }
+        if (requested.getScheme() == null || !requested.getScheme().equalsIgnoreCase(allowed.getScheme())) {
+            return false;
+        }
+        if (requested.getHost() == null || !requested.getHost().equalsIgnoreCase(allowed.getHost())) {
+            return false;
+        }
+        if (allowed.getPort() != -1 && allowed.getPort() != requested.getPort()) {
+            return false;
+        }
+        String allowedPath = allowed.getPath() == null ? "" : allowed.getPath();
+        String requestedPath = requested.getPath() == null ? "" : requested.getPath();
+        if (allowedPath.isEmpty() || allowedPath.equals("/")) {
+            return true;
+        }
+        return requestedPath.equals(allowedPath) || requestedPath.startsWith(allowedPath + "/");
     }
 
     private String buildCognitoClientName(String requestedName) {

@@ -117,6 +117,76 @@ class DynamicClientRegistrationServiceTest {
     }
 
     @Test
+    void shouldRejectRedirectUriWithPathSuffixBeyondAllowlistEntry() {
+        // Given — attacker appends extra path bytes to an allowed callback path.
+        // A naive startsWith match would accept this and let the auth code be smuggled
+        // to a Cognito-redirected URL the attacker controls.
+        ClientRegistrationRequestDto request = new ClientRegistrationRequestDto(
+                List.of("https://claude.ai/api/mcp/auth_callback.evil.com"), "Attacker",
+                null, null, null, null);
+
+        // When / Then
+        ClientRegistrationException exception = assertThrows(ClientRegistrationException.class,
+                () -> service.register(request));
+        assertEquals("invalid_redirect_uri", exception.getError());
+    }
+
+    @Test
+    void shouldRejectRedirectUriOnHostThatMerelyStartsWithAllowedHost() {
+        // Given — the allowlist has "http://localhost"; this must NOT permit
+        // "http://localhostevil.com". Naive startsWith on the full URI accepted it.
+        ClientRegistrationRequestDto request = new ClientRegistrationRequestDto(
+                List.of("http://localhostevil.com/cb"), "Attacker", null, null, null, null);
+
+        // When / Then
+        ClientRegistrationException exception = assertThrows(ClientRegistrationException.class,
+                () -> service.register(request));
+        assertEquals("invalid_redirect_uri", exception.getError());
+    }
+
+    @Test
+    void shouldAllowLocalhostWildcardOnAnyPortAndPath() {
+        // Given — the allowlist entry "http://localhost" with no port and no path is
+        // intentionally a dev wildcard for any localhost callback. Make sure the new
+        // matcher preserves that behaviour.
+        when(cognitoClient.listUserPoolClients(any(ListUserPoolClientsRequest.class)))
+                .thenReturn(emptyClientList());
+        UserPoolClientType created = UserPoolClientType.builder()
+                .clientId("dev-client-id")
+                .clientSecret("dev-secret")
+                .callbackURLs("http://localhost:9090/oauth/callback")
+                .build();
+        when(cognitoClient.createUserPoolClient(any(CreateUserPoolClientRequest.class)))
+                .thenReturn(CreateUserPoolClientResponse.builder().userPoolClient(created).build());
+        ClientRegistrationRequestDto request = new ClientRegistrationRequestDto(
+                List.of("http://localhost:9090/oauth/callback"), "Dev", null, null, null, null);
+
+        // When / Then — does not throw
+        ClientRegistrationResponseDto response = service.register(request);
+        assertEquals("dev-client-id", response.clientId());
+    }
+
+    @Test
+    void shouldAllowExactCallbackPathMatch() {
+        // Given — straightforward positive case for the exact allowed callback.
+        when(cognitoClient.listUserPoolClients(any(ListUserPoolClientsRequest.class)))
+                .thenReturn(emptyClientList());
+        UserPoolClientType created = UserPoolClientType.builder()
+                .clientId("ok-client-id")
+                .clientSecret("ok-secret")
+                .callbackURLs("https://claude.ai/api/mcp/auth_callback")
+                .build();
+        when(cognitoClient.createUserPoolClient(any(CreateUserPoolClientRequest.class)))
+                .thenReturn(CreateUserPoolClientResponse.builder().userPoolClient(created).build());
+        ClientRegistrationRequestDto request = new ClientRegistrationRequestDto(
+                List.of("https://claude.ai/api/mcp/auth_callback"), "Claude", null, null, null, null);
+
+        // When / Then — does not throw
+        ClientRegistrationResponseDto response = service.register(request);
+        assertEquals("ok-client-id", response.clientId());
+    }
+
+    @Test
     void shouldRejectMissingRedirectUris() {
         // Given
         ClientRegistrationRequestDto request = new ClientRegistrationRequestDto(
