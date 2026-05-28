@@ -28,9 +28,11 @@ public class OAuthMetadataController {
     public ResponseEntity<AuthServerMetadataDto> authorizationServerMetadata() {
         String base = properties.publicBaseUrl();
         String cognitoDomain = properties.cognitoDomain();
+        // authorization_endpoint goes through our proxy (McpAuthorizationProxyController)
+        // which strips the RFC 8707 `resource` parameter — see that class for the why.
         AuthServerMetadataDto metadata = new AuthServerMetadataDto(
                 base,
-                cognitoDomain + "/oauth2/authorize",
+                base + "/mcp/oauth2/authorize",
                 cognitoDomain + "/oauth2/token",
                 base + "/oauth2/register",
                 properties.cognitoIssuer() + "/.well-known/jwks.json",
