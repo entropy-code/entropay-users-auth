@@ -46,7 +46,8 @@ public class WebSecurityConfig {
     public static final String[] MCP_AUTH_GATEWAY_URLS = {
             "/.well-known/oauth-authorization-server",
             "/.well-known/openid-configuration",
-            "/oauth2/register"
+            "/oauth2/register",
+            "/mcp/oauth2/authorize"
     };
 
     private final CognitoOidcLogoutSuccessHandler cognitoOidcLogoutSuccessHandler;

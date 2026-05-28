@@ -29,8 +29,7 @@ class OAuthMetadataControllerTest {
         // Then
         assertEquals("http://localhost:8000", metadata.issuer());
         assertEquals("http://localhost:8000/oauth2/register", metadata.registrationEndpoint());
-        assertEquals("https://entropay-dev.auth.us-east-1.amazoncognito.com/oauth2/authorize",
-                metadata.authorizationEndpoint());
+        assertEquals("http://localhost:8000/mcp/oauth2/authorize", metadata.authorizationEndpoint());
         assertEquals("https://entropay-dev.auth.us-east-1.amazoncognito.com/oauth2/token",
                 metadata.tokenEndpoint());
         assertTrue(metadata.codeChallengeMethodsSupported().contains("S256"));

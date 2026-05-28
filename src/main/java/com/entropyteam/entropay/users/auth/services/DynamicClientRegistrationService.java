@@ -15,6 +15,7 @@ import com.entropyteam.entropay.users.auth.dtos.ClientRegistrationRequestDto;
 import com.entropyteam.entropay.users.auth.dtos.ClientRegistrationResponseDto;
 import software.amazon.awssdk.services.cognitoidentityprovider.CognitoIdentityProviderClient;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.CognitoIdentityProviderException;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.CreateManagedLoginBrandingRequest;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.CreateUserPoolClientRequest;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.CreateUserPoolClientResponse;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.DescribeUserPoolClientRequest;
@@ -94,11 +95,34 @@ public class DynamicClientRegistrationService {
             UserPoolClientType client = response.userPoolClient();
             LOGGER.info("Registered MCP OAuth client {} ({}) for redirect_uris {}",
                     client.clientId(), cognitoClientName, redirectUris);
+            applyDefaultManagedLoginBranding(client.clientId());
             return toResponse(client, cognitoClientName);
         } catch (CognitoIdentityProviderException e) {
             String detail = e.awsErrorDetails() != null ? e.awsErrorDetails().errorMessage() : e.getMessage();
             LOGGER.error("Cognito rejected client registration: {}", detail, e);
             throw new ClientRegistrationException("invalid_client_metadata", "Cognito error: " + detail);
+        }
+    }
+
+    /**
+     * Attaches a Cognito-provided default branding row to the freshly-created client.
+     * Required on user pools whose hosted UI domain runs Managed Login v2 (ESSENTIALS tier
+     * and above) — without a per-client branding the Cognito Hosted UI returns
+     * "Login pages unavailable" for every sign-in attempt. On LITE pools (Managed Login v1)
+     * the call is unnecessary; if AWS rejects it for that reason we log and move on so a
+     * single user-pool tier difference does not block registration.
+     */
+    private void applyDefaultManagedLoginBranding(String clientId) {
+        try {
+            cognitoClient.createManagedLoginBranding(CreateManagedLoginBrandingRequest.builder()
+                    .userPoolId(properties.userPoolId())
+                    .clientId(clientId)
+                    .useCognitoProvidedValues(true)
+                    .build());
+            LOGGER.info("Applied default ManagedLoginBranding to client {}", clientId);
+        } catch (CognitoIdentityProviderException e) {
+            String detail = e.awsErrorDetails() != null ? e.awsErrorDetails().errorMessage() : e.getMessage();
+            LOGGER.warn("Could not attach ManagedLoginBranding to client {} (continuing): {}", clientId, detail);
         }
     }
 
